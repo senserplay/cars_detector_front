@@ -9,6 +9,8 @@ export const useVideoUploader = () => {
     if (file) {
       const url = URL.createObjectURL(file);
       setVideoUrl(url);
+      setVideoFile(file);
+
     }
   };
 

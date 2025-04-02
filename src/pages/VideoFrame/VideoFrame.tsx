@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Box, Button, Text } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
+import { apiInstance } from "@/shared/api/apiConfig";
 
 interface Point {
   x: number;
@@ -9,7 +10,7 @@ interface Point {
 
 export default function VideoFrame() {
   const { state } = useLocation();
-  const { videoUrl, videoFile } = state; // videoFile – объект файла
+  const { videoUrl, fileName } = state;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [points, setPoints] = useState<Point[]>([]);
   const [firstFrameImg, setFirstFrameImg] = useState<string | null>(null);
@@ -74,28 +75,36 @@ export default function VideoFrame() {
     }
     const region1 = points.slice(0, 4);
     const region2 = points.slice(4, 8);
-    const formData = new FormData();
-    formData.append("file", videoFile);
-    formData.append("start", JSON.stringify(region1));
-    formData.append("end", JSON.stringify(region2));
-    console.log(region1,region2)
-    // try {
-    //   const response = await fetch("/process-video", {
-    //     method: "POST",
-    //     body: formData,
-    //   });
-    //   const data = await response.json();
-    //   alert(`Количество машин: ${data.cnt_cars}`);
-    // } catch (error) {
-    //   console.error("Ошибка при отправке данных:", error);
-    //   alert("Произошла ошибка при обработке видео.");
-    // }
+    
+   
+    console.log(region1, region2);
+    const payload = {
+      file_name: state.fileName,
+      start: region1,
+      end: region2,
+    };
+    console.log('payload',payload)
+    try {
+      const response = await apiInstance.post("/process-video", payload,{
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      console.log("запрос прошел", response.data);
+      
+      // const data = await response.json();
+      alert(`Количество машин: ${response.data.cars_cnt}`);
+    } catch (error) {
+      console.error("Ошибка при отправке данных:", error);
+      alert("Произошла ошибка при обработке видео.");
+    }
   };
 
   return (
     <Box p={20}>
       <Text fontSize="2xl" mb={4}>
-        Выберите 8 точек на первом кадре видео (сначала 4 для первого региона, затем 4 для второго)
+        Выберите 8 точек на первом кадре видео (сначала 4 для первого региона,
+        затем 4 для второго)
       </Text>
       <canvas
         ref={canvasRef}
