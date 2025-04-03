@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, Button, Text } from "@chakra-ui/react";
+import { Box, Button, Spinner, Text } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 import { apiInstance } from "@/shared/api/apiConfig";
 
@@ -11,9 +11,12 @@ interface Point {
 export default function VideoFrame() {
   const { state } = useLocation();
   const { videoUrl, fileName } = state;
+  const [isTup,setIsTup]=useState(false);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [points, setPoints] = useState<Point[]>([]);
   const [firstFrameImg, setFirstFrameImg] = useState<string | null>(null);
+  const [carsCount, setCarsCount] = useState<number | null>(null); // Новое состояние
 
   useEffect(() => {
     const video = document.createElement("video");
@@ -73,6 +76,7 @@ export default function VideoFrame() {
       alert("Пожалуйста, выберите 8 точек.");
       return;
     }
+    setIsTup(true)
     const region1 = points.slice(0, 4);
     const region2 = points.slice(4, 8);
     
@@ -94,6 +98,8 @@ export default function VideoFrame() {
       
       // const data = await response.json();
       alert(`Количество машин: ${response.data.cars_cnt}`);
+      setCarsCount(response.data.cars_cnt);
+      setIsTup(false)
     } catch (error) {
       console.error("Ошибка при отправке данных:", error);
       alert("Произошла ошибка при обработке видео.");
@@ -111,14 +117,22 @@ export default function VideoFrame() {
         onClick={handleCanvasClick}
         style={{ border: "1px solid #ccc", cursor: "crosshair" }}
       />
-      <Box mt={4}>
+          {isTup?(
+          <Spinner size="xl" color="blue.500" />
+
+          ):carsCount === null ? (<><Box mt={4}>
         <Button onClick={handleProcess} disabled={points.length !== 8}>
           Получить результат
         </Button>
       </Box>
       <Box mt={2}>
         <Text>Выбрано точек: {points.length} из 8</Text>
-      </Box>
+      </Box></>):(
+        <Box mt={4}>
+          <Text fontSize="xl">Количество машин: {carsCount}</Text>
+        </Box>
+      )}
+      
     </Box>
   );
 }
